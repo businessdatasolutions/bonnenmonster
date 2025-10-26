@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tankbon Verwerker</title>
+  
+  <!-- PWA Tags -->
+  <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIlRhbmtib24gVmVyd2Vya2VyIiwKICAic2hvcnRfbmFtZSI6ICJUYW5rYm9ubmVuIiwKICAiZGVzY3JpcHRpb24iOiAiU2NhbiB0YW5rYm9ubmVuIGVuIHNsYSBkZSBkYXRhIGRpcmVjdCBvcCBpbiBCYXNlcm93LiIsCiAgInN0YXJ0X3VybCI6ICIvIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjRjNGNEY2IiwKICAidGhlbWVfY29sb3IiOiAiIzFFNDBBRiIsCiAgIm9yaWVudGF0aW9uIjogInBvcnRyYWl0LXByaW1hcnkiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICIvaWNvbnMvaWNvbi0xOTJ4MTkyLnBuZyIsCiAgICAgICJ0eXBlIjogImltYWdlL3BuZyIsCiAgICAgICJzaXplcyI6ICIxOTJ4MTkyIgogICAgfSwKICAgIHsKICAgICAgInNyYyI6ICIvaWNvbnMvaWNvbi01MTJ4NTEyLnBuZyIsCiAgICAgICJ0eXBlIjogImltYWdlL3BuZyIsCiAgICAgICJzaXplcyI6ICI1MTJ4NTEyIiwKICAgICAgInB1cnBvc2UiOiAiYW55IG1hc2thYmxlIgogICAgfQogIF0KfQo=" />
+  <meta name="theme-color" content="#1E40AF" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              DEFAULT: '#1E40AF',
+              hover: '#1D4ED8',
+            },
+            secondary: '#F3F4F6',
+            accent: '#3B82F6',
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.5s ease-in-out',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: 0, transform: 'translateY(10px)' },
+              '100%': { opacity: 1, transform: 'translateY(0)' },
+            },
+          },
+        },
+      },
+    };
+  </script>
+
+<link rel="stylesheet" href="/index.css">
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.27.0",
+    "vite": "https://aistudiocdn.com/vite@^7.1.12",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.0"
+  }
+}
+</script>
+  <script type="module" crossorigin src="/bonnenmonster/assets/index-dc4e728d.js"></script>
+</head>
+<body class="bg-secondary text-gray-800">
+  <div id="root"></div>
+  
+
+</body>
+</html>
