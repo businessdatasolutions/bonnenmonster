@@ -6,8 +6,9 @@ export interface ReceiptData {
   netAmount: number;
 }
 
-export interface BaserowConfig {
+export interface AppConfig {
   apiUrl: string;
   apiKey: string;
   tableId: string;
+  geminiApiKey: string;
 }

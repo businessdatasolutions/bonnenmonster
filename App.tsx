@@ -2,7 +2,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { analyzeReceipt } from './services/geminiService';
 import { saveToBaserow } from './services/baserowService';
-import type { ReceiptData, BaserowConfig } from './types';
+import type { ReceiptData, AppConfig } from './types';
 import Header from './components/Header';
 import ImageUploader from './components/ImageUploader';
 import ReceiptDataDisplay from './components/ReceiptDataDisplay';
@@ -26,7 +26,7 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [baserowConfig, setBaserowConfig] = useState<BaserowConfig | null>(null);
+  const [appConfig, setAppConfig] = useState<AppConfig | null>(null);
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
@@ -44,13 +44,13 @@ const App: React.FC = () => {
 
   useEffect(() => {
     try {
-      const savedConfig = localStorage.getItem('baserowConfig');
+      const savedConfig = localStorage.getItem('appConfig');
       if (savedConfig) {
-        setBaserowConfig(JSON.parse(savedConfig));
+        setAppConfig(JSON.parse(savedConfig));
       }
     } catch (e) {
-      console.error("Failed to parse Baserow config from localStorage", e);
-      localStorage.removeItem('baserowConfig');
+      console.error("Failed to parse App config from localStorage", e);
+      localStorage.removeItem('appConfig');
     }
   }, []);
 
@@ -63,6 +63,12 @@ const App: React.FC = () => {
   const handleAnalyze = useCallback(async () => {
     if (!imageFile) {
       setError('Selecteer eerst een afbeelding.');
+      return;
+    }
+    
+    if (!appConfig?.geminiApiKey) {
+      setError('Stel uw Gemini API-sleutel in via de instellingen (tandwiel-icoon).');
+      setIsSettingsOpen(true);
       return;
     }
 
@@ -79,7 +85,7 @@ const App: React.FC = () => {
           if (!base64String) {
              throw new Error('Kon afbeelding niet converteren.');
           }
-          const data = await analyzeReceipt(base64String, imageFile.type);
+          const data = await analyzeReceipt(base64String, imageFile.type, appConfig.geminiApiKey);
           setExtractedData(data);
         } catch (err: any) {
           console.error(err);
@@ -92,14 +98,12 @@ const App: React.FC = () => {
         setError('Fout bij het lezen van het bestand.');
         setIsLoading(false);
       }
-
-    // FIX: Added curly braces to the catch block to correctly scope the error handling logic.
     } catch (err: any) {
       console.error(err);
       setError(`Analyse mislukt: ${err.message}`);
       setIsLoading(false);
     }
-  }, [imageFile]);
+  }, [imageFile, appConfig]);
 
   const handleReset = () => {
     setImageFile(null);
@@ -112,18 +116,19 @@ const App: React.FC = () => {
     setError(null);
   };
 
-  const handleSaveSettings = (config: BaserowConfig) => {
-    setBaserowConfig(config);
-    localStorage.setItem('baserowConfig', JSON.stringify(config));
+  const handleSaveSettings = (config: AppConfig) => {
+    setAppConfig(config);
+    localStorage.setItem('appConfig', JSON.stringify(config));
     setIsSettingsOpen(false);
   };
   
   const handleSaveToBaserow = async (data: ReceiptData) => {
-    if (!baserowConfig || !baserowConfig.apiKey || !baserowConfig.tableId) {
+    if (!appConfig || !appConfig.apiKey || !appConfig.tableId) {
+      setError('Baserow configuratie is niet ingesteld. Open de instellingen.');
       setIsSettingsOpen(true);
       throw new Error("Baserow configuratie is niet ingesteld.");
     }
-    await saveToBaserow(data, baserowConfig);
+    await saveToBaserow(data, appConfig);
   };
 
   const handleInstallClick = async () => {
@@ -135,7 +140,7 @@ const App: React.FC = () => {
     }
   };
 
-  const isBaserowConfigured = !!(baserowConfig?.apiKey && baserowConfig?.tableId);
+  const isBaserowConfigured = !!(appConfig?.apiKey && appConfig?.tableId);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -146,7 +151,7 @@ const App: React.FC = () => {
       />
       {isSettingsOpen && (
         <SettingsModal
-          config={baserowConfig}
+          config={appConfig}
           onSave={handleSaveSettings}
           onClose={() => setIsSettingsOpen(false)}
         />

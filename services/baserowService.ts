@@ -1,6 +1,6 @@
-import type { ReceiptData, BaserowConfig } from '../types';
+import type { ReceiptData, AppConfig } from '../types';
 
-export const saveToBaserow = async (data: ReceiptData, config: BaserowConfig): Promise<void> => {
+export const saveToBaserow = async (data: ReceiptData, config: AppConfig): Promise<void> => {
   const { apiUrl, apiKey, tableId } = config;
 
   // Map our data to match typical Baserow field names.

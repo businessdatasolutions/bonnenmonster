@@ -14,8 +14,11 @@ const receiptSchema = {
     required: ['date', 'stationName', 'totalAmount', 'vatAmount', 'netAmount'],
 };
 
-export const analyzeReceipt = async (base64ImageData: string, mimeType: string): Promise<ReceiptData> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+export const analyzeReceipt = async (base64ImageData: string, mimeType: string, geminiApiKey: string): Promise<ReceiptData> => {
+  if (!geminiApiKey) {
+    throw new Error("Gemini API-sleutel is niet ingesteld. Ga naar de instellingen om deze toe te voegen.");
+  }
+  const ai = new GoogleGenAI({ apiKey: geminiApiKey });
 
   const textPart = {
     text: "Analyseer deze tankbon en extraheer de volgende informatie. Geef de bedragen als numerieke waarden. Zorg ervoor dat de datum in JJJJ-MM-DD formaat is. Geef null terug voor velden die niet gevonden kunnen worden."
