@@ -47,6 +47,7 @@ Use descriptive names for issue files:
 ## Active Issues
 
 - [002-camera-button-shows-upload-before-camera.md](002-camera-button-shows-upload-before-camera.md) - Camera button shows file picker/gallery before opening camera (Priority: Medium)
+- [003-save-button-allows-duplicate-saves.md](003-save-button-allows-duplicate-saves.md) - Save button reverts to active state after success, allowing duplicate database entries (Priority: High)
 
 ## Resolved Issues
 
