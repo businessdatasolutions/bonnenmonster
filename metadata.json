@@ -1,5 +1,5 @@
 {
-  "name": "Tankbon Verwerker",
-  "description": "Een applicatie om tankbonnen te uploaden, de gegevens te laten extraheren door Gemini AI en de resultaten overzichtelijk weer te geven.",
+  "name": "Bonnenmonster",
+  "description": "Een applicatie om bonnen te uploaden, de gegevens te laten extraheren door Gemini AI en de resultaten overzichtelijk weer te geven.",
   "requestFramePermissions": []
 }

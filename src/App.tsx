@@ -128,7 +128,8 @@ const App: React.FC = () => {
       setIsSettingsOpen(true);
       throw new Error("Baserow configuratie is niet ingesteld.");
     }
-    await saveToBaserow(data, appConfig);
+    // Pass the image file to save along with the receipt data
+    await saveToBaserow(data, appConfig, imageFile || undefined);
   };
 
   const handleInstallClick = async () => {

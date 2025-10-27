@@ -1,8 +1,9 @@
 {
-  "name": "Tankbon Verwerker",
-  "short_name": "Tankbonnen",
-  "description": "Scan tankbonnen en sla de data direct op in Baserow.",
-  "start_url": "/",
+  "name": "Bonnenmonster",
+  "short_name": "Bonnenmonster",
+  "description": "Scan bonnen en sla de data direct op in Baserow.",
+  "start_url": "/bonnenmonster/",
+  "scope": "/bonnenmonster/",
   "display": "standalone",
   "background_color": "#F3F4F6",
   "theme_color": "#1E40AF",
