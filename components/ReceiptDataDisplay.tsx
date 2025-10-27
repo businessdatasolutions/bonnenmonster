@@ -39,7 +39,7 @@ const ReceiptDataDisplay: React.FC<ReceiptDataDisplayProps> = ({ data, onReset, 
     try {
       await onSaveToBaserow(data);
       setSaveState('success');
-      setTimeout(() => setSaveState('idle'), 2500);
+      // Keep success state permanent - no reset to prevent duplicate saves
     } catch (error: any) {
       setSaveState('error');
       setSaveError(error.message || 'Onbekende fout opgetreden.');

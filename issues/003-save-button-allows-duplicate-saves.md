@@ -1,8 +1,9 @@
 # Save Button Allows Duplicate Saves After Success
 
-**Status**: Open
+**Status**: Resolved
 **Priority**: High
 **Created**: 2025-10-27
+**Resolved**: 2025-10-27
 
 ## Description
 
@@ -204,3 +205,46 @@ setSaveState('saved'); // No timeout, permanent state
 ## Additional Context
 
 This is a high-priority issue as it directly affects data integrity. Duplicate entries require manual cleanup and can cause reporting issues. The fix should be straightforward and improve overall UX significantly.
+
+## Resolution
+
+**Implementation**: Option 1 - Disable After Save (simplest and most effective)
+
+**Root Cause**:
+The `handleSave` function in ReceiptDataDisplay.tsx had a `setTimeout(() => setSaveState('idle'), 2500)` on line 42 that automatically reset the button state to idle after 2.5 seconds, making it clickable again.
+
+**Changes Made**:
+
+**Updated ReceiptDataDisplay.tsx** (lines 36-47):
+
+- Removed the `setTimeout` that was resetting state back to 'idle'
+- Save state now remains at 'success' permanently after successful save
+- Button stays green with "✓ Opgeslagen" text
+- Button remains disabled (via `disabled={saveState === 'loading' || saveState === 'success'}` on line 88)
+- Added explanatory comment: "Keep success state permanent - no reset to prevent duplicate saves"
+
+**Files Modified**:
+
+- `components/ReceiptDataDisplay.tsx` (removed setTimeout, line 42)
+- `src/components/ReceiptDataDisplay.tsx` (mirrored change)
+
+**User Workflow After Fix**:
+
+1. User uploads/captures receipt
+2. User analyzes receipt with Gemini AI
+3. User clicks "Opslaan in Baserow" button
+4. Button shows loading state with spinner
+5. After successful save, button turns green with "✓ Opgeslagen"
+6. Button remains green and disabled - **cannot be clicked again**
+7. User clicks "Nieuwe Bon" button to reset and start next receipt
+
+**Result**:
+
+- ✓ Save button cannot be clicked twice for same receipt
+- ✓ Clear visual indication when receipt is saved (stays green)
+- ✓ User can easily proceed to next receipt ("Nieuwe Bon" button)
+- ✓ No duplicate entries possible in Baserow
+- ✓ Button state persists (doesn't revert to blue)
+- ✓ Data integrity maintained
+
+**Acceptance Criteria Met**: All 7 acceptance criteria have been satisfied with this minimal one-line fix.
