@@ -1,8 +1,9 @@
 # Camera Button Shows Upload Screen Before Camera
 
-**Status**: Open
+**Status**: Resolved
 **Priority**: Medium
 **Created**: 2025-10-27
+**Resolved**: 2025-10-27
 
 ## Description
 
@@ -132,3 +133,40 @@ Browser compatibility note: The behavior may vary between:
 - Other mobile browsers
 
 Testing needed across different platforms to verify behavior.
+
+## Resolution
+
+**Implementation**: Option 1 (MediaDevices API) with Option 2 (Progressive Enhancement) fallback
+
+**Changes Made**:
+
+1. **Created CameraModal.tsx** - Full-screen camera modal component:
+   - Uses `navigator.mediaDevices.getUserMedia()` for direct camera access
+   - Video preview with `facingMode: 'environment'` for rear camera
+   - Canvas-based image capture converting to File object
+   - Comprehensive error handling:
+     - Permission denied (NotAllowedError)
+     - No camera found (NotFoundError)
+     - Camera in use (NotReadableError)
+   - Loading states and success animation
+   - Dutch language throughout
+
+2. **Updated ImageUploader.tsx**:
+   - Added CameraModal component integration
+   - Feature detection: checks `navigator.mediaDevices?.getUserMedia` support
+   - Opens CameraModal for modern browsers
+   - Falls back to `capture` attribute for older browsers
+   - Maintains backward compatibility
+
+**Files Modified**:
+- `components/CameraModal.tsx` (new file)
+- `components/ImageUploader.tsx` (updated)
+- `src/components/CameraModal.tsx` (mirrored)
+- `src/components/ImageUploader.tsx` (mirrored)
+
+**Result**:
+- Clicking "Maak een Foto" now directly opens camera preview
+- No intermediate upload/gallery screen
+- Professional full-screen camera experience
+- Graceful fallback for unsupported browsers
+- Proper error handling and user feedback
