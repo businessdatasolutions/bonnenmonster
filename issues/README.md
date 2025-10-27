@@ -46,8 +46,8 @@ Use descriptive names for issue files:
 
 ## Active Issues
 
-- [001-add-camera-capture-feature.md](001-add-camera-capture-feature.md) - Add native camera functionality for capturing receipt photos directly in the app (Priority: High)
+- None yet
 
 ## Resolved Issues
 
-- None yet
+- [001-add-camera-capture-feature.md](001-add-camera-capture-feature.md) - Add native camera functionality for capturing receipt photos directly in the app (Resolved: 2025-10-27)
