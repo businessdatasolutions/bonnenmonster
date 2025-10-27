@@ -46,7 +46,7 @@ Use descriptive names for issue files:
 
 ## Active Issues
 
-- None yet
+- [002-camera-button-shows-upload-before-camera.md](002-camera-button-shows-upload-before-camera.md) - Camera button shows file picker/gallery before opening camera (Priority: Medium)
 
 ## Resolved Issues
 
