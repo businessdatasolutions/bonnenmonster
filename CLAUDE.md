@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is "Bonnenmonster" (Receipt Monster), a Progressive Web App (PWA) for scanning receipts and storing the extracted data in Baserow. The app uses Google's Gemini AI to analyze receipt images and extract structured data.
+This is "Bonnenmonster" (Receipt Monster), a Progressive Web App (PWA) for scanning invoices and receipts and storing the extracted data in Baserow. The app uses Google's Gemini AI to analyze invoice/receipt images and extract structured data.
 
 **Tech Stack**: React 18 + TypeScript + Vite + Tailwind CSS + Google Gemini AI + Baserow API
 
@@ -54,27 +54,40 @@ The codebase has a dual structure (root and `src/` mirror each other):
 
 - [App.tsx](App.tsx) - Main application component with state management for image upload, analysis, and settings
 - [types.ts](types.ts) - Core TypeScript interfaces:
-  - `ReceiptData`: Extracted receipt fields (date, stationName, totalAmount, vatAmount, netAmount)
+  - `ReceiptData`: Extracted receipt fields (date, supplierName, totalAmount, vatAmount, netAmount, lineItems)
+  - `LineItem`: Individual line items with description, amounts, VAT rate, and selection state
   - `AppConfig`: User configuration (apiUrl, apiKey, tableId, geminiApiKey)
 - [services/geminiService.ts](services/geminiService.ts) - Gemini AI integration with structured output schema
 - [services/baserowService.ts](services/baserowService.ts) - Baserow API integration for saving receipts
+- [components/LineItemsSelector.tsx](components/LineItemsSelector.tsx) - UI component for selecting/deselecting line items
 
 ### Gemini AI Integration
 
 The app uses Gemini 2.5 Flash model with structured output:
-- Schema enforces required fields: date (YYYY-MM-DD), stationName, totalAmount, vatAmount, netAmount
-- Prompt is in Dutch: "Analyseer deze tankbon en extraheer de volgende informatie..."
+- Schema enforces required fields: date (YYYY-MM-DD), supplierName, totalAmount, vatAmount, netAmount
+- Optional field: lineItems (array of individual items on the receipt)
+- Prompt is in Dutch: "Analyseer deze factuur en extraheer de volgende informatie..."
 - Uses `@google/genai` SDK with response schema validation
+- Automatically adds unique IDs and selection state to extracted line items
 
 ### Baserow Integration
 
 Saves to Baserow using field names:
 - `Datum` (date)
-- `Tankstation` (station name)
-- `Totaal Bedrag` (total amount)
-- `BTW Bedrag` (VAT amount)
-- `Netto Bedrag` (net amount)
+- `Leverancier` (supplier name)
+- `Totaal Bedrag` (total amount - recalculated based on selected items)
+- `BTW Bedrag` (VAT amount - recalculated based on selected items)
+- `Netto Bedrag` (net amount - recalculated based on selected items)
+- `Items` (comma-separated list of selected item descriptions) - OPTIONAL
+- `Aantal Items` (count of selected items) - OPTIONAL
 - `Photo` (file upload - receipt image)
+
+**Line Item Selection**:
+When a receipt contains multiple line items (e.g., multiple products on one receipt), users can:
+- View each item separately with checkboxes
+- Deselect unwanted items (e.g., personal vs. business expenses)
+- See real-time recalculation of totals based on selected items
+- Save only the selected items and their recalculated totals to Baserow
 
 **Photo Upload Process:**
 1. `uploadPhotoToBaserow()` - Uploads image file via multipart/form-data to `{apiUrl}/api/user-files/upload-file/`

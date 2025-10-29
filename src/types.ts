@@ -1,9 +1,22 @@
+export interface LineItem {
+  id: string;                    // Unique ID for React key
+  description: string;           // Item name/description
+  quantity?: number;             // Quantity if available
+  unitPrice?: number;            // Price per unit if available
+  netAmount: number;             // Net amount for this item
+  vatAmount: number;             // VAT amount for this item
+  vatRate?: number;              // VAT percentage (e.g., 7, 19, 21)
+  totalAmount: number;           // Total including VAT
+  selected: boolean;             // User selection state (for UI)
+}
+
 export interface ReceiptData {
   date: string;
-  stationName: string;
+  supplierName: string;
   totalAmount: number;
   vatAmount: number;
   netAmount: number;
+  lineItems?: LineItem[];        // Optional itemized breakdown
 }
 
 export interface AppConfig {

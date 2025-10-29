@@ -6,12 +6,29 @@ const receiptSchema = {
     type: Type.OBJECT,
     properties: {
         date: { type: Type.STRING, description: 'De datum van de transactie in JJJJ-MM-DD formaat.' },
-        stationName: { type: Type.STRING, description: 'De naam van het tankstation.' },
+        supplierName: { type: Type.STRING, description: 'De naam van de leverancier.' },
         totalAmount: { type: Type.NUMBER, description: 'Het totale bedrag inclusief BTW.' },
         vatAmount: { type: Type.NUMBER, description: 'Het BTW-bedrag.' },
         netAmount: { type: Type.NUMBER, description: 'Het bedrag exclusief BTW (totaal - BTW).' },
+        lineItems: {
+            type: Type.ARRAY,
+            description: 'Individuele items/regels op de bon indien aanwezig. Geef een lege array als er geen duidelijke items zijn.',
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    description: { type: Type.STRING, description: 'Naam/omschrijving van het item' },
+                    quantity: { type: Type.NUMBER, description: 'Aantal stuks (optioneel)' },
+                    unitPrice: { type: Type.NUMBER, description: 'Prijs per stuk (optioneel)' },
+                    netAmount: { type: Type.NUMBER, description: 'Bedrag exclusief BTW voor dit item' },
+                    vatAmount: { type: Type.NUMBER, description: 'BTW-bedrag voor dit item' },
+                    vatRate: { type: Type.NUMBER, description: 'BTW-percentage (7, 19, 21, etc.)' },
+                    totalAmount: { type: Type.NUMBER, description: 'Totaalbedrag inclusief BTW voor dit item' }
+                },
+                required: ['description', 'netAmount', 'vatAmount', 'totalAmount']
+            }
+        }
     },
-    required: ['date', 'stationName', 'totalAmount', 'vatAmount', 'netAmount'],
+    required: ['date', 'supplierName', 'totalAmount', 'vatAmount', 'netAmount'],
 };
 
 export const analyzeReceipt = async (base64ImageData: string, mimeType: string, geminiApiKey: string): Promise<ReceiptData> => {
@@ -21,7 +38,16 @@ export const analyzeReceipt = async (base64ImageData: string, mimeType: string, 
   const ai = new GoogleGenAI({ apiKey: geminiApiKey });
 
   const textPart = {
-    text: "Analyseer deze tankbon en extraheer de volgende informatie. Geef de bedragen als numerieke waarden. Zorg ervoor dat de datum in JJJJ-MM-DD formaat is. Geef null terug voor velden die niet gevonden kunnen worden."
+    text: `Analyseer deze factuur en extraheer de volgende informatie.
+
+    Als de bon meerdere items/regels bevat (bijvoorbeeld verschillende producten of diensten),
+    extraheer dan elk item afzonderlijk met de bijbehorende bedragen per item.
+    Geef voor elk item het netto bedrag, BTW-bedrag, en totaalbedrag.
+    Als het BTW-percentage per item zichtbaar is, neem dat dan ook op.
+    Als er geen duidelijke items zijn of het is een enkel totaalbedrag, geef dan een lege array voor lineItems.
+
+    Geef de bedragen als numerieke waarden. Zorg ervoor dat de datum in JJJJ-MM-DD formaat is.
+    Geef null terug voor velden die niet gevonden kunnen worden.`
   };
 
   const imagePart = {
@@ -43,7 +69,16 @@ export const analyzeReceipt = async (base64ImageData: string, mimeType: string, 
 
     const jsonString = response.text.trim();
     const parsedData = JSON.parse(jsonString);
-    
+
+    // Add IDs and selected flag to line items for UI state management
+    if (parsedData.lineItems && Array.isArray(parsedData.lineItems)) {
+        parsedData.lineItems = parsedData.lineItems.map((item: any, index: number) => ({
+            ...item,
+            id: `item-${Date.now()}-${index}`, // Unique ID for React keys
+            selected: true // All items selected by default
+        }));
+    }
+
     // Validate required fields
     for (const key of receiptSchema.required) {
         if (parsedData[key] === undefined || parsedData[key] === null) {

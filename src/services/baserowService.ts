@@ -68,15 +68,28 @@ export const saveToBaserow = async (
   }
 
   // Map our data to match typical Baserow field names.
-  // Assumes Baserow table has columns named: 'Datum', 'Tankstation', 'Totaal Bedrag', 'BTW Bedrag', 'Netto Bedrag', 'Photo'
+  // Assumes Baserow table has columns named: 'Datum', 'Leverancier', 'Totaal Bedrag', 'BTW Bedrag', 'Netto Bedrag', 'Photo'
   const rowData: Record<string, any> = {
     // Baserow's date field expects ISO 8601 format (YYYY-MM-DD), which Gemini already provides.
     'Datum': data.date,
-    'Tankstation': data.stationName,
+    'Leverancier': data.supplierName,
     'Totaal Bedrag': data.totalAmount,
     'BTW Bedrag': data.vatAmount,
     'Netto Bedrag': data.netAmount,
   };
+
+  // Add line items information if present
+  if (data.lineItems && data.lineItems.length > 0) {
+    const selectedItems = data.lineItems.filter(item => item.selected);
+    // Save comma-separated list of item descriptions
+    rowData['Items'] = selectedItems.map(item => item.description).join(', ');
+    // Save count of selected items
+    rowData['Aantal Items'] = selectedItems.length;
+
+    // Optional: Save detailed line items as JSON string for advanced reporting
+    // Uncomment if you create a "Line Items Detail" long text field in Baserow
+    // rowData['Line Items Detail'] = JSON.stringify(selectedItems);
+  }
 
   // Add photo if uploaded successfully
   if (uploadedPhotoData) {
