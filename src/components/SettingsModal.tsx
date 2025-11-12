@@ -12,10 +12,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ config, onSave, onClose }
   const [apiUrl, setApiUrl] = useState(config?.apiUrl || 'https://api.baserow.io');
   const [apiKey, setApiKey] = useState(config?.apiKey || '');
   const [tableId, setTableId] = useState(config?.tableId || '');
+  const [logTableId, setLogTableId] = useState(config?.logTableId || '');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({ apiUrl, apiKey, tableId, geminiApiKey });
+    onSave({ apiUrl, apiKey, tableId, geminiApiKey, logTableId: logTableId || undefined });
   };
 
   return (
@@ -89,7 +90,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ config, onSave, onClose }
                 />
               </div>
               <div>
-                <label htmlFor="tableId" className="block text-sm font-medium text-gray-700 mb-1">Table ID</label>
+                <label htmlFor="tableId" className="block text-sm font-medium text-gray-700 mb-1">Table ID (Bonnen)</label>
                 <input
                   id="tableId"
                   type="text"
@@ -98,6 +99,20 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ config, onSave, onClose }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
                   placeholder="bv. 12345"
                 />
+              </div>
+              <div>
+                <label htmlFor="logTableId" className="block text-sm font-medium text-gray-700 mb-1">Log Table ID (Optioneel)</label>
+                <input
+                  id="logTableId"
+                  type="text"
+                  value={logTableId}
+                  onChange={e => setLogTableId(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
+                  placeholder="bv. 67890"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Voor debugging: maak een tabel met velden: Timestamp, Action Type, Status, Message, Error Details, Receipt Data, User Agent
+                </p>
               </div>
             </div>
           </div>

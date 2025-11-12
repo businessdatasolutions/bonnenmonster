@@ -1,8 +1,8 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { analyzeReceipt } from './services/geminiService';
-import { saveToBaserow } from './services/baserowService';
-import type { ReceiptData, AppConfig } from './types';
+import { saveToBaserow, logToBaserow } from './services/baserowService';
+import type { ReceiptData, AppConfig, LogEntry, LogActionType, LogStatus } from './types';
 import Header from './components/Header';
 import ImageUploader from './components/ImageUploader';
 import ReceiptDataDisplay from './components/ReceiptDataDisplay';
@@ -54,6 +54,32 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // Helper function to create and log events
+  const createLog = useCallback((
+    actionType: LogActionType,
+    status: LogStatus,
+    message: string,
+    errorDetails?: any,
+    receiptData?: ReceiptData
+  ) => {
+    if (!appConfig) return;
+
+    const logEntry: LogEntry = {
+      timestamp: new Date().toISOString(),
+      actionType,
+      status,
+      message,
+      errorDetails: errorDetails ? JSON.stringify(errorDetails, null, 2) : undefined,
+      receiptData: receiptData ? JSON.stringify(receiptData, null, 2) : undefined,
+      userAgent: navigator.userAgent,
+    };
+
+    // Log asynchronously without blocking the UI
+    logToBaserow(logEntry, appConfig).catch(err => {
+      console.warn("Failed to log event:", err);
+    });
+  }, [appConfig]);
+
   const handleImageSelect = (file: File) => {
     handleReset();
     setImageFile(file);
@@ -76,6 +102,8 @@ const App: React.FC = () => {
     setError(null);
     setExtractedData(null);
 
+    createLog('gemini_analyze_start', 'info', `Starting Gemini analysis for file: ${imageFile.name}`);
+
     try {
       const reader = new FileReader();
       reader.readAsDataURL(imageFile);
@@ -87,9 +115,11 @@ const App: React.FC = () => {
           }
           const data = await analyzeReceipt(base64String, imageFile.type, appConfig.geminiApiKey);
           setExtractedData(data);
+          createLog('gemini_analyze_success', 'success', 'Gemini analysis completed successfully', undefined, data);
         } catch (err: any) {
           console.error(err);
           setError(`Analyse mislukt: ${err.message}`);
+          createLog('gemini_analyze_error', 'error', `Gemini analysis failed: ${err.message}`, err);
         } finally {
            setIsLoading(false);
         }
@@ -97,13 +127,15 @@ const App: React.FC = () => {
       reader.onerror = () => {
         setError('Fout bij het lezen van het bestand.');
         setIsLoading(false);
+        createLog('gemini_analyze_error', 'error', 'Failed to read image file', { error: 'FileReader error' });
       }
     } catch (err: any) {
       console.error(err);
       setError(`Analyse mislukt: ${err.message}`);
       setIsLoading(false);
+      createLog('gemini_analyze_error', 'error', `Gemini analysis failed: ${err.message}`, err);
     }
-  }, [imageFile, appConfig]);
+  }, [imageFile, appConfig, createLog]);
 
   const handleReset = () => {
     setImageFile(null);
@@ -128,8 +160,17 @@ const App: React.FC = () => {
       setIsSettingsOpen(true);
       throw new Error("Baserow configuratie is niet ingesteld.");
     }
-    // Pass the image file to save along with the receipt data
-    await saveToBaserow(data, appConfig, imageFile || undefined);
+
+    createLog('baserow_save_start', 'info', 'Starting save to Baserow', undefined, data);
+
+    try {
+      // Pass the image file to save along with the receipt data
+      await saveToBaserow(data, appConfig, imageFile || undefined);
+      createLog('baserow_save_success', 'success', 'Successfully saved receipt to Baserow', undefined, data);
+    } catch (err: any) {
+      createLog('baserow_save_error', 'error', `Failed to save to Baserow: ${err.message}`, err, data);
+      throw err; // Re-throw to let ReceiptDataDisplay handle the error UI
+    }
   };
 
   const handleInstallClick = async () => {

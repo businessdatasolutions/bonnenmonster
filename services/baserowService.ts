@@ -1,4 +1,4 @@
-import type { ReceiptData, AppConfig, BaserowFileUploadResponse } from '../types';
+import type { ReceiptData, AppConfig, BaserowFileUploadResponse, LogEntry } from '../types';
 
 /**
  * Upload a photo file to Baserow
@@ -56,10 +56,17 @@ export const saveToBaserow = async (
   if (photoFile) {
     try {
       const uploadResponse = await uploadPhotoToBaserow(photoFile, config);
-      // Baserow file field expects an array of objects with the file metadata
+      // Baserow file field expects an array of objects with complete file metadata
       uploadedPhotoData = [{
         name: uploadResponse.name,
-        // Include other metadata that Baserow expects
+        url: uploadResponse.url,
+        thumbnails: uploadResponse.thumbnails,
+        size: uploadResponse.size,
+        mime_type: uploadResponse.mime_type,
+        is_image: uploadResponse.is_image,
+        image_width: uploadResponse.image_width,
+        image_height: uploadResponse.image_height,
+        uploaded_at: uploadResponse.uploaded_at
       }];
     } catch (error) {
       console.error("Photo upload failed, continuing without photo:", error);
@@ -85,6 +92,10 @@ export const saveToBaserow = async (
 
   const endpoint = `${apiUrl}/api/database/rows/table/${tableId}/?user_field_names=true`;
 
+  // Debug logging
+  console.log("Saving to Baserow with data:", JSON.stringify(rowData, null, 2));
+  console.log("Endpoint:", endpoint);
+
   try {
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -98,7 +109,15 @@ export const saveToBaserow = async (
     if (!response.ok) {
       const errorBody = await response.json();
       console.error("Baserow API Error:", errorBody);
-      throw new Error(`Fout bij opslaan in Baserow: ${errorBody.detail || response.statusText}`);
+      console.error("Full error body:", JSON.stringify(errorBody, null, 2));
+
+      // Extract detailed error information from various possible error properties
+      const errorMessage = errorBody.error
+        || errorBody.detail
+        || errorBody.message
+        || JSON.stringify(errorBody);
+
+      throw new Error(`Fout bij opslaan in Baserow: ${errorMessage}`);
     }
 
   } catch (error) {
@@ -107,5 +126,62 @@ export const saveToBaserow = async (
         throw new Error(error.message);
     }
     throw new Error("Kon geen verbinding maken met de Baserow API.");
+  }
+};
+
+/**
+ * Log an event/action to Baserow logging table
+ * @param logEntry - The log entry data
+ * @param config - Baserow API configuration (must include logTableId)
+ * @returns Promise that resolves when log is saved (or rejects silently)
+ */
+export const logToBaserow = async (
+  logEntry: LogEntry,
+  config: AppConfig
+): Promise<void> => {
+  // Skip if no log table configured
+  if (!config.logTableId) {
+    return;
+  }
+
+  const { apiUrl, apiKey, logTableId } = config;
+
+  // Map log entry to Baserow field names
+  // Assumes Baserow table has columns: 'Timestamp', 'Action Type', 'Status', 'Message', 'Error Details', 'Receipt Data', 'User Agent'
+  const rowData: Record<string, any> = {
+    'Timestamp': logEntry.timestamp,
+    'Action Type': logEntry.actionType,
+    'Status': logEntry.status,
+    'Message': logEntry.message,
+    'User Agent': logEntry.userAgent,
+  };
+
+  // Add optional fields if present
+  if (logEntry.errorDetails) {
+    rowData['Error Details'] = logEntry.errorDetails;
+  }
+  if (logEntry.receiptData) {
+    rowData['Receipt Data'] = logEntry.receiptData;
+  }
+
+  const endpoint = `${apiUrl}/api/database/rows/table/${logTableId}/?user_field_names=true`;
+
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Token ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(rowData),
+    });
+
+    if (!response.ok) {
+      // Silently fail logging - don't block the main application
+      console.warn("Failed to log to Baserow:", response.status, response.statusText);
+    }
+  } catch (error) {
+    // Silently fail logging - don't block the main application
+    console.warn("Error logging to Baserow:", error);
   }
 };
