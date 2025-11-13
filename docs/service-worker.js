@@ -24,6 +24,11 @@ self.addEventListener('install', (event) => {
 
 // Serve cached content when offline and cache new requests
 self.addEventListener('fetch', (event) => {
+  // Skip caching for non-HTTP(S) schemes (chrome-extension, data, blob, etc.)
+  if (!event.request.url.startsWith('http://') && !event.request.url.startsWith('https://')) {
+    return;
+  }
+
   // Skip caching for API requests (Gemini AI, Baserow)
   if (event.request.url.includes('api.baserow.io') ||
       event.request.url.includes('generativelanguage.googleapis.com') ||
