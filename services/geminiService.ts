@@ -67,16 +67,27 @@ export const analyzeReceipt = async (base64ImageData: string, mimeType: string, 
       },
     });
 
-    const jsonString = response.text.trim();
+    const jsonString = response.text?.trim();
+    if (!jsonString) {
+      throw new Error("Geen response ontvangen van Gemini AI");
+    }
     const parsedData = JSON.parse(jsonString);
+
+    // Debug log to see what Gemini returns
+    console.log("📊 Gemini parsed data:", JSON.stringify(parsedData, null, 2));
+    console.log("📋 Line items from Gemini:", parsedData.lineItems);
 
     // Add IDs and selected flag to line items for UI state management
     if (parsedData.lineItems && Array.isArray(parsedData.lineItems)) {
+        console.log("✅ Processing line items - count:", parsedData.lineItems.length);
         parsedData.lineItems = parsedData.lineItems.map((item: any, index: number) => ({
             ...item,
             id: `item-${Date.now()}-${index}`, // Unique ID for React keys
             selected: true // All items selected by default
         }));
+        console.log("✨ Line items after processing:", parsedData.lineItems);
+    } else {
+        console.log("❌ No line items found or not an array");
     }
 
     // Validate required fields
