@@ -74,15 +74,18 @@ export const saveToBaserow = async (
     }
   }
 
+  // Helper function to round to 2 decimal places (Baserow requirement)
+  const roundToTwo = (num: number): number => Math.round(num * 100) / 100;
+
   // Map our data to match typical Baserow field names.
   // Assumes Baserow table has columns named: 'Datum', 'Leverancier', 'Totaal Bedrag', 'BTW Bedrag', 'Netto Bedrag', 'Photo'
   const rowData: Record<string, any> = {
     // Baserow's date field expects ISO 8601 format (YYYY-MM-DD), which Gemini already provides.
     'Datum': data.date,
     'Leverancier': data.supplierName,
-    'Totaal Bedrag': data.totalAmount,
-    'BTW Bedrag': data.vatAmount,
-    'Netto Bedrag': data.netAmount,
+    'Totaal Bedrag': roundToTwo(data.totalAmount),
+    'BTW Bedrag': roundToTwo(data.vatAmount),
+    'Netto Bedrag': roundToTwo(data.netAmount),
   };
 
   // Add line items information if present
@@ -190,8 +193,10 @@ export const logToBaserow = async (
     });
 
     if (!response.ok) {
-      // Silently fail logging - don't block the main application
+      // Silently fail logging - don't block the main application, but show detailed error
+      const errorBody = await response.json().catch(() => ({ detail: response.statusText }));
       console.warn("Failed to log to Baserow:", response.status, response.statusText);
+      console.warn("Log table error details:", JSON.stringify(errorBody, null, 2));
     }
   } catch (error) {
     // Silently fail logging - don't block the main application
